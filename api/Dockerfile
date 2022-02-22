@@ -1,4 +1,4 @@
-FROM tiangolo/uvicorn-gunicorn-fastapi:python3.8-alpine3.10 as build-image
+FROM tiangolo/uvicorn-gunicorn-fastapi:python3.9-alpine3.14 as build-image
 
 # python
 ENV PYTHONUNBUFFERED=1 \
@@ -10,7 +10,7 @@ ENV PYTHONUNBUFFERED=1 \
     PIP_DEFAULT_TIMEOUT=100 \
     # poetry
     # https://python-poetry.org/docs/configuration/#using-environment-variables
-    POETRY_VERSION=1.1.4 \
+    POETRY_VERSION=1.1.13 \
     # make poetry install to this location
     POETRY_HOME="/opt/poetry" \
     # make poetry create the virtual environment in the project's root
@@ -41,7 +41,7 @@ RUN poetry export --without-hashes -f requirements.txt > requirements.txt \
 
 
 
-FROM tiangolo/uvicorn-gunicorn-fastapi:python3.8-alpine3.10 as production-image
+FROM tiangolo/uvicorn-gunicorn-fastapi:python3.9-alpine3.14 as production-image
 
 ENV PYTHONUNBUFFERED=1 \
     # prevents python creating .pyc files
