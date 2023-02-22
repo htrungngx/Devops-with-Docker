@@ -31,7 +31,7 @@ WORKDIR '/app'
 RUN apk add --no-cache g++ postgresql-dev curl libffi-dev
 
 # Install Poetry
-RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
+RUN curl -sSL https://install.python-poetry.org | python3
 
 # Copy poetry.lock* in case it doesn't exist in the repo
 COPY ./pyproject.toml ./poetry.lock* /app/
