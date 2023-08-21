@@ -1,0 +1,82 @@
+version: '3.9'
+
+services:
+  api:
+    build: ./api
+    image: api:latest   
+    restart: always
+    #expose:
+    #  - 8080
+    environment:
+      - POSTGRES_USER=student_user
+      - POSTGRES_PASSWORD=student_password
+      - POSTGRES_DATABASE=labo
+      - POSTGRES_PORT=5432
+      - POSTGRES_HOST=postgres
+      - PORT=8080
+    labels:
+      - "traefik.http.routers.api.rule=Host(`api.local`)"
+      - traefik.http.services.api.loadbalancer.server.port=8080
+      - "traefik.http.routers.api.middlewares=admin"
+      - "traefik.http.middlewares.admin.basicauth.users=user:$$apr1$$oBPrTOM3$$Xc8.cRhWE54N5zZqCzKv1/"
+    depends_on:
+       postgres:
+          condition: service_healthy
+
+  frontend:
+    build: ./web
+    image: frontend:latest   
+    expose:
+      - 5000
+    environment:
+      - VARIABLE=VALUE
+      - FLASK_SECRET_KEY=keykey
+      - JWT_SECRET_KEY=SG9wZWxpamsgZ2VicnVpa3QgZWVuIHN0dWRlbnQgZGl0IG9vaXQgbnV0dGlnLg==
+      
+
+  nginx:
+    build: ./nginx
+    restart: always
+    image: nginx:latest   
+    #expose:
+    #  - "80"
+    labels:
+      - "traefik.http.routers.frontend.rule=Host(`frontend.local`)"
+    depends_on:
+      - api
+    volumes:
+      - /app/static
+
+  postgres:
+    image: 'postgres:15.3-alpine'
+    environment:
+      - POSTGRES_USER=student_user
+      - POSTGRES_PASSWORD=student_password
+      - POSTGRES_DB=labo
+    labels:
+      - "traefik.enable=false"
+    healthcheck:
+        test: ["CMD-SHELL", "pg_isready"]
+        interval: 10s
+        timeout: 5s
+        retries: 5
+        start_period: 10s
+    volumes:
+      - postgres:/var/lib/postgresql/data/
+
+  reverse-proxy:
+    image: traefik:v2.10
+    command: --api.insecure --providers.docker
+    labels:
+      - "traefik.http.routers.traefik.rule=Host(`localhost`)"
+      - "traefik.http.services.traefik.loadbalancer.server.port=8080"
+      - "traefik.http.routers.traefik.middlewares=admin"
+      - "traefik.http.middlewares.admin.basicauth.users=user:$$apr1$$oBPrTOM3$$Xc8.cRhWE54N5zZqCzKv1/"
+    ports:
+      - "80:80"
+      - "8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+volumes:
+  postgres:
